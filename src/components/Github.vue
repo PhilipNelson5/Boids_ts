@@ -30,7 +30,7 @@ export default class Github extends Vue {
   box-shadow: -4px 4px #999;
 }
 .button:hover {
-  background-color: #00a4db;
+  background-color: #d6f5ff;
   box-shadow: -3px 3px #777;
   color: white;
   border: 2px solid #0080aa;
