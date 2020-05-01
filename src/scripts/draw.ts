@@ -1,3 +1,4 @@
+import copy from "fast-copy";
 import IPoint from '@/interfaces/i-point';
 import IPrimitave from '@/interfaces/i-primitave';
 import Maths from '@/scripts/math';
@@ -51,7 +52,10 @@ export default class Draw {
     this.context.stroke();
   }
   drawFOV(center: Vector, radius: number, forward: Vector, angle: number, color: string) {
-    forward = Vector.normalize(forward);
+    forward = copy(forward);
+    forward.z = 0;
+    forward.normalize();
+
     radius = Maths.lerp(0, this.width, radius / this.world.width)
     center = new Vector(
       Maths.lerp(0, this.width, center.x / this.world.width),

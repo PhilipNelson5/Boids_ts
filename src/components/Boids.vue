@@ -164,12 +164,13 @@
 
 <script lang="ts">
 /* eslint-disable @typescript-eslint/camelcase */
-import { Component, Vue } from "vue-property-decorator";
-import IOptions from "@/interfaces/i-options";
 import Boid from "@/scripts/boid";
 import Draw from "@/scripts/draw";
-import maths from "@/scripts/math";
+import IOptions from "@/interfaces/i-options";
 import Vector from "@/scripts/vector";
+import copy from "fast-copy";
+import maths from "@/scripts/math";
+import { Component, Vue } from "vue-property-decorator";
 
 @Component
 export default class Boids extends Vue {
@@ -219,13 +220,12 @@ export default class Boids extends Vue {
   //get 
 
   private update(dt: number): void {
-    const boids = this.boids.slice();
+    // const boids = JSON.parse(JSON.stringify(this.boids));
+    const boids = copy(this.boids);
     for (const boid of this.boids) {
       boid.update(dt, boids, this.opts);
     }
 
-    this.opts.fps_hist.shift();
-    this.opts.fps_hist.push((1 / dt) * 1000);
   }
 
   private render_frame(): void {
@@ -248,7 +248,7 @@ export default class Boids extends Vue {
       if (this.draw)
         for (let i = 0; i < more; ++i) {
           const boid = new Boid({
-            pos: Vector.rand(0, this.opts.world.width, 0, this.opts.world.height),
+            pos: Vector.rand(0, this.opts.world.width, 0, this.opts.world.height, 0, 100),
             vel: Vector.rand(),
             color: `rgb(0,0,${cs[i]})`,
             draw: this.draw
@@ -260,6 +260,9 @@ export default class Boids extends Vue {
     if (this.boids.length > this.opts.num_boids) {
       this.boids.splice(this.opts.num_boids);
     }
+
+    this.opts.fps_hist.shift();
+    this.opts.fps_hist.push((1 / dt) * 1000);
     requestAnimationFrame(this.animation_loop);
   }
 
@@ -277,7 +280,7 @@ export default class Boids extends Vue {
     const cs = maths.linear_spaced_array(100, 255, this.opts.num_boids);
     for (let i = 0; i < this.opts.num_boids; ++i) {
       const boid = new Boid({
-        pos: Vector.rand(0, this.opts.world.width, 0, this.opts.world.height),
+        pos: Vector.rand(0, this.opts.world.width, 0, this.opts.world.height, 10, 90),
         vel: Vector.rand(),
         color: `rgb(0,0,${cs[i]})`,
         draw: this.draw
@@ -286,7 +289,6 @@ export default class Boids extends Vue {
       this.boids.push(boid);
     }
     this.boids[0].debug = true;
-    this.boids[0].color = 'rgb(255, 0, 0)';
     requestAnimationFrame(this.animation_loop);
   }
 }

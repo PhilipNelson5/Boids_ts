@@ -39,8 +39,8 @@ export default class Boid {
       graphics.translatePrimitive(
         graphics.rotatePrimitive(
           graphics.scalePrimitive(graphics.triangle, {
-            x: Maths.lerp(0, this.draw.width, boid_size / width),
-            y: Maths.lerp(0, this.draw.width, boid_size / width),
+            x: Maths.lerp(0, this.draw.width, boid_size / width) / this.pos.z * 50,
+            y: Maths.lerp(0, this.draw.width, boid_size / width) / this.pos.z * 50,
           }),
           th
         ),
@@ -92,9 +92,7 @@ export default class Boid {
     if (this.debug) this.seen = [];
     for (const other of boids) {
       if (this.id == other.id) continue;
-      const x = this.pos.x - other.pos.x;
-      const y = this.pos.y - other.pos.y;
-      const d = Math.sqrt(x * x + y * y);
+      const d = Vector.dist(this.pos, other.pos);
 
       // other boid is close
       if (d > opts.vision_dist) continue;
@@ -174,8 +172,7 @@ export default class Boid {
     /* --------------- */
     /* update position */
     /* --------------- */
-    this.pos.x += this.vel.x * dt;
-    this.pos.y += this.vel.y * dt;
+    this.pos.add(this.vel);
 
     if (this.pos.x > opts.world.width) this.pos.x = 1;
     if (this.pos.x < 0) this.pos.x = opts.world.width-1;

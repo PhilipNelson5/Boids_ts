@@ -10,7 +10,7 @@ export default class Vector {
   static rand(minx = -1, maxx = 1, miny = -1, maxy = 1, minz = -1, maxz = 1): Vector {
     const x = rand(minx, maxx);
     const y = rand(miny, maxy);
-    const z = 0; //rand(minz, maxz);
+    const z = rand(minz, maxz);
 
     const v = new Vector(x, y, z);
     return v;
@@ -19,7 +19,7 @@ export default class Vector {
   static randNorm(minx = -1, maxx = 1, miny = -1, maxy = 1, minz = -1, maxz = 1): Vector {
     const x = rand(minx, maxx);
     const y = rand(miny, maxy);
-    const z = 0; //rand(minz, maxz);
+    const z = rand(minz, maxz);
 
     const v = new Vector(x, y, z);
     v.normalize();
@@ -46,6 +46,13 @@ export default class Vector {
 
   static div(v: Vector, n: number): Vector {
     return new Vector(v.x / n, v.y / n, v.z / n);
+  }
+
+  static dist(v1: Vector, v2: Vector): number {
+    const x = v1.x - v2.x;
+    const y = v1.y - v2.y;
+    const z = v1.z - v2.z;
+    return Math.sqrt(x*x + y*y + z*z);
   }
 
   constructor(x = 0, y = 0, z = 0) {
