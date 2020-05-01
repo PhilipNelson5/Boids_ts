@@ -4,7 +4,7 @@
       <div>
         <canvas width="1920" height="1080" ref="main_canvas" id="main_canvas" />
       </div>
-      <p class="right">
+      <p class="text-align-right">
         {{ (opts.fps_hist.reduce((a, b) => a + b) / opts.fps_hist.length).toFixed(0) }}
         FPS
       </p>
@@ -24,13 +24,13 @@
         <input
           id="speed"
           type="range"
-          min="0"
+          min=".01"
           max="2"
           step=".01"
           class="slider"
-          v-model="opts.boid_speed"
+          v-model="opts.max_speed"
         />
-        <p>{{ opts.boid_speed }}</p>
+        <p>{{ opts.max_speed }}</p>
         <label for="size">Boid Size</label>
         <input
           id="size"
@@ -42,9 +42,7 @@
           v-model="opts.boid_size"
         />
         <p>{{ opts.boid_size }}</p>
-        <div class="bar" />
-        <div class="bar" />
-        <div class="bar" />
+        <div class="bar" /> <div class="bar" /> <div class="bar" />
         <label for="field_of_view_deg">Field of View</label>
         <input
           id="field_of_view_deg"
@@ -56,7 +54,7 @@
           v-model="opts.field_of_view_deg"
         />
         <p>{{ opts.field_of_view_deg }}°</p>
-        <label for="vision_dist">Vision Distance</label>
+        <label for="vision_dist">View Distance</label>
         <input
           id="vision_dist"
           type="range"
@@ -67,7 +65,7 @@
           v-model="opts.vision_dist"
         />
         <p>{{ opts.vision_dist }}</p>
-        <label for="collision_dist">Collision Avoidance Distance</label>
+        <label for="collision_dist">Separation Distance</label>
         <input
           id="collision_dist"
           type="range"
@@ -81,53 +79,63 @@
         <label for="draw_debug">Draw Vision Lines</label>
         <input id="draw_debug" type="checkbox" v-model="opts.draw_debug" />
         <p></p>
-        <div class="bar" />
-        <div class="bar" />
-        <div class="bar" />
-        <label for="collision_avoidance_strength">Collision Avoidance Strength</label>
+        <div class="bar" /> <div class="bar" /> <div class="bar" />
+        <label for="collision_avoidance_strength">Separation</label>
         <input
           id="collision_avoidance_strength"
           type="range"
           min="0"
-          max=".02"
-          step=".001"
+          max="1"
+          step=".01"
           class="slider"
           v-model="opts.collision_avoidance_strength"
         />
         <p>{{ opts.collision_avoidance_strength }}</p>
-        <label for="velocity_align_strength">Velocity Alignment Strength</label>
+        <label for="velocity_align_strength">Alignment</label>
         <input
           id="velocity_align_strength"
           type="range"
           min="0"
-          max=".02"
-          step=".001"
+          max="1"
+          step=".01"
           class="slider"
           v-model="opts.velocity_align_strength"
         />
         <p>{{ opts.velocity_align_strength }}</p>
-        <label for="center_of_mass_align_strength">Center of Mass Alignment Strength</label>
+        <label for="center_of_mass_align_strength">Cohesion</label>
         <input
           id="center_of_mass_align_strength"
           type="range"
           min="0"
-          max=".02"
-          step=".001"
+          max="1"
+          step=".01"
           class="slider"
           v-model="opts.center_of_mass_align_strength"
         />
         <p>{{ opts.center_of_mass_align_strength }}</p>
+        <div class="bar" /> <div class="bar" /> <div class="bar" />
+        <label for="world_height">World Size</label>
+        <input
+          id="world_height"
+          type="range"
+          min="100"
+          max="10000"
+          step="10"
+          class="slider"
+          v-model="world_height"
+        />
+        <div><p>{{ opts.world.width }} X {{ opts.world.height }}</p></div>
       </div>
       <div class="bar m1em" />
       <div>
         <p class="left">
           <a href="https://en.wikipedia.org/wiki/Boids">Boids</a> are an
           artificial life program, developed by Craig Reynolds, which simulates
-          the flocking behaviour of birds. The name "boid" corresponds to a
-          shortened version of "bird-oid object", which refers to a bird-like
-          object. Boids are an example of emergent behavior; that is, the
-          complexity of Boids arises from the interaction of individual agents
-          (the boids, in this case) adhering to a set of simple rules. The rules
+          the flocking behaviour of birds, fish, insects, or any flocking animal.
+          The name "boid" corresponds to a shortened version of "bird-oid object",
+          which refers to a bird-like object. Boids are an example of emergent behavior;
+          that is, the complexity of Boids arises from the interaction of individual
+          agents (the boids, in this case) adhering to a set of simple rules. The rules
           applied in the simplest Boids world are as follows:
         </p>
         <ul>
@@ -161,21 +169,23 @@ import IOptions from "@/interfaces/i-options";
 import Boid from "@/scripts/boid";
 import Draw from "@/scripts/draw";
 import maths from "@/scripts/math";
+import Vector from "@/scripts/vector";
 
 @Component
 export default class Boids extends Vue {
   private opts: IOptions = {
     num_boids: 100,
-    boid_speed: 0.45,
+    max_speed: 0.25,
     boid_size: 10,
     field_of_view_deg: 120,
     vision_dist: 100,
-    collision_dist: 50,
+    collision_dist: 30,
     draw_debug: true,
-    collision_avoidance_strength: 0.005,
-    velocity_align_strength: 0.01,
-    center_of_mass_align_strength: 0.001,
-    fps_hist: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    collision_avoidance_strength: .05,
+    velocity_align_strength: .31,
+    center_of_mass_align_strength: .16,
+    fps_hist: new Array(60).fill(60),
+    world: {width: 0, height: 0},
   };
 
   private boids: Array<Boid> = [];
@@ -189,9 +199,29 @@ export default class Boids extends Vue {
     console.log("constructor");
   }
 
+  get world_height(): number {
+    return this.opts.world.height;
+  }
+
+  set world_height(y: number) {
+    this.opts.world.width = Math.trunc(this.aspect_ratio * y);
+    this.opts.world.height = y;
+  }
+
+  get aspect_ratio(): number {
+    if (this.draw)
+    {
+      return this.draw.width / this.draw.height;
+    }
+    return 1;
+  }
+
+  //get 
+
   private update(dt: number): void {
+    const boids = this.boids.slice();
     for (const boid of this.boids) {
-      boid.update(dt, this.boids, this.opts);
+      boid.update(dt, boids, this.opts);
     }
 
     this.opts.fps_hist.shift();
@@ -217,15 +247,14 @@ export default class Boids extends Vue {
       const cs = maths.linear_spaced_array(100, 255, more);
       if (this.draw)
         for (let i = 0; i < more; ++i) {
-          this.boids.push(
-            new Boid(
-              { x: 100, y: 100 },
-              maths.random_vector(),
-              `rgb(0,0,${cs[i]})`,
-              false,
-              this.draw
-            )
-          );
+          const boid = new Boid({
+            pos: Vector.rand(0, this.opts.world.width, 0, this.opts.world.height),
+            vel: Vector.rand(),
+            color: `rgb(0,0,${cs[i]})`,
+            draw: this.draw
+          })
+          boid.vel.setMag(this.opts.max_speed);
+          this.boids.push(boid);
         }
     }
     if (this.boids.length > this.opts.num_boids) {
@@ -238,22 +267,26 @@ export default class Boids extends Vue {
     console.log("mounted");
 
     const canvas = this.$refs.main_canvas as HTMLCanvasElement;
+    this.draw = new Draw(canvas, this.opts.world);
     this.boids = [];
-    this.draw = new Draw(canvas);
+
+    const initalsize = 1500;
+    this.opts.world.width = Math.round(this.aspect_ratio * initalsize);
+    this.opts.world.height = initalsize;
 
     const cs = maths.linear_spaced_array(100, 255, this.opts.num_boids);
     for (let i = 0; i < this.opts.num_boids; ++i) {
-      this.boids.push(
-        new Boid(
-          { x: 100, y: 100 },
-          maths.random_vector(),
-          `rgb(0,0,${cs[i]})`,
-          false,
-          this.draw
-        )
-      );
+      const boid = new Boid({
+        pos: Vector.rand(0, this.opts.world.width, 0, this.opts.world.height),
+        vel: Vector.rand(),
+        color: `rgb(0,0,${cs[i]})`,
+        draw: this.draw
+      })
+      boid.vel.setMag(this.opts.max_speed);
+      this.boids.push(boid);
     }
     this.boids[0].debug = true;
+    this.boids[0].color = 'rgb(255, 0, 0)';
     requestAnimationFrame(this.animation_loop);
   }
 }
@@ -273,6 +306,9 @@ export default class Boids extends Vue {
   text-align: right;
 }
 .container > p {
+  text-align: left;
+}
+.container > div {
   text-align: left;
 }
 label {
@@ -324,7 +360,7 @@ canvas {
   max-width: 100%;
   height: auto;
 }
-.right {
+.text-align-right {
   text-align: right;
 }
 .left {

@@ -1,6 +1,12 @@
 /* eslint-disable @typescript-eslint/camelcase */
 import IPoint from "@/interfaces/i-point"
 
+function lerp(v0: number, v1: number, t: number): number {
+  // return (1 - t) * v0 + t * v1;
+  return v0 + t * (v1 - v0);
+}
+
+
 function getRandom(min: number, max: number): number {
   return Math.random() * (max - min) + min;
 }
@@ -41,9 +47,10 @@ function linear_spaced_array(startValue: number, stopValue: number, cardinality:
 }
 
 export default {
-  random_vector,
   angle_between,
   cross_product,
-  rotate_vector,
+  lerp,
   linear_spaced_array,
+  random_vector,
+  rotate_vector,
 };
