@@ -124,7 +124,7 @@
           class="slider"
           v-model="world_height"
         />
-        <div><p>{{ opts.world.width }} X {{ opts.world.height }}</p></div>
+        <div><p>{{ opts.world.width }} X {{ opts.world.height }} X {{ opts.world.depth }}</p></div>
       </div>
       <div class="bar m1em" />
       <div>
@@ -186,7 +186,7 @@ export default class Boids extends Vue {
     velocity_align_strength: .31,
     center_of_mass_align_strength: .16,
     fps_hist: new Array(60).fill(60),
-    world: {width: 0, height: 0},
+    world: {width: 0, height: 0, depth: 0},
   };
 
   private boids: Array<Boid> = [];
@@ -207,6 +207,7 @@ export default class Boids extends Vue {
   set world_height(y: number) {
     this.opts.world.width = Math.trunc(this.aspect_ratio * y);
     this.opts.world.height = y;
+    this.opts.world.depth = Math.min(this.opts.world.width, this.opts.world.height);
   }
 
   get aspect_ratio(): number {
@@ -273,9 +274,10 @@ export default class Boids extends Vue {
     this.draw = new Draw(canvas, this.opts.world);
     this.boids = [];
 
-    const initalsize = 1500;
+    const initalsize = 500;
     this.opts.world.width = Math.round(this.aspect_ratio * initalsize);
     this.opts.world.height = initalsize;
+    this.opts.world.depth = Math.min(this.opts.world.width, this.opts.world.height);
 
     const cs = maths.linear_spaced_array(100, 255, this.opts.num_boids);
     for (let i = 0; i < this.opts.num_boids; ++i) {

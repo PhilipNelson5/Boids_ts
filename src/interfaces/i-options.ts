@@ -10,5 +10,5 @@ export default interface IOptions {
   num_boids: number;
   velocity_align_strength: number;
   vision_dist: number;
-  world: {width: number, height: number};
+  world: {width: number, height: number, depth: number};
 }

@@ -28,19 +28,20 @@ export default class Boid {
     this.com = new Vector();
   }
 
-  public render({ boid_size, world:{width, height}}: IOptions) {
+  public render({ boid_size, world:{width, height, depth}}: IOptions) {
     const th =
       Math.atan(this.vel.y / this.vel.x) - (this.vel.x < 0 ? Math.PI : 0);
     const pos = new Vector(
       Maths.lerp(0, this.draw.width, this.pos.x / width),
-      Maths.lerp(0, this.draw.height, this.pos.y / height)
+      Maths.lerp(0, this.draw.height, this.pos.y / height),
+      Maths.lerp(0, Math.min(this.draw.height, this.draw.width), this.pos.z / depth)
     )
     this.draw.drawPrimative(
       graphics.translatePrimitive(
         graphics.rotatePrimitive(
           graphics.scalePrimitive(graphics.triangle, {
-            x: Maths.lerp(0, this.draw.width, boid_size / width) / this.pos.z * 50,
-            y: Maths.lerp(0, this.draw.width, boid_size / width) / this.pos.z * 50,
+            x: Maths.lerp(0, this.draw.width, boid_size / width) / (pos.z + 50) * 50,
+            y: Maths.lerp(0, this.draw.width, boid_size / width) / (pos.z + 50) * 50,
           }),
           th
         ),
@@ -148,19 +149,6 @@ export default class Boid {
       f_cohesion.setMag(opts.max_speed);
       f_cohesion.mul(opts.center_of_mass_align_strength);
       steering.add(f_cohesion);
-      
-      // const th = Maths.angle_between(com_v, this.vel);
-      // if (Maths.cross_product(com_v, this.vel) > 0) {
-      //   this.vel = Maths.rotate_vector(
-      //     this.vel,
-      //     -th * dt * opts.center_of_mass_align_strength
-      //   );
-      // } else {
-      //   this.vel = Maths.rotate_vector(
-      //     this.vel,
-      //     th * dt * opts.center_of_mass_align_strength
-      //   );
-      // }
     }
 
     if (seen.length > 0)
@@ -178,6 +166,8 @@ export default class Boid {
     if (this.pos.x < 0) this.pos.x = opts.world.width-1;
     if (this.pos.y > opts.world.height) this.pos.y = 1;
     if (this.pos.y < 0) this.pos.y = opts.world.height-1;
+    if (this.pos.z > opts.world.depth) this.pos.z = 1;
+    if (this.pos.z < 0) this.pos.z = opts.world.depth-1;
 
     // if (this.debug) console.log(JSON.stringify(this.vel), JSON.stringify(this.pos));
   }
